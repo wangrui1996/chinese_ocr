@@ -43,7 +43,8 @@ def charRec(img, text_recs, adjust=False):
    """
    results = {}
    xDim, yDim = img.shape[1], img.shape[0]
-    
+
+
    for index, rec in enumerate(text_recs):
        xlength = int((rec[6] - rec[0]) * 0.1)
        ylength = int((rec[7] - rec[1]) * 0.2)
@@ -66,11 +67,17 @@ def charRec(img, text_recs, adjust=False):
            continue
 
        image = Image.fromarray(partImg).convert('L')
+       #import numpy as np
+       #cv2.imshow("ff", cv2.rectangle(img, pt1, pt3, color=(0,255,0)))
+       #cv2.imshow("fff", np.array(image))
+       #cv2.waitKey(0)
        text = keras_densenet(image)
        
        if len(text) > 0:
-           results[index] = [rec]
+           results[index] = [(float(pt1[0])/xDim, float(pt1[1])/yDim), (float(pt3[0])/xDim, float(pt3[1])/yDim)]
+           #print(results[index])
            results[index].append(text)  # 识别文字
+           #print(results[index])
  
    return results
 
@@ -83,5 +90,5 @@ def model(img, adjust=False):
     text_recs, img_framed, img = text_detect(img)
     text_recs = sort_box(text_recs)
     result = charRec(img, text_recs, adjust)
-    return result, img_framed
+    return result, img_framed, text_recs
 

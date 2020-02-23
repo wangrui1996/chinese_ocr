@@ -13,3 +13,12 @@ cache/
 logs/
 output/
 
+# Project models
+checkpoints/
+fonts/
+VOCdevkit2007
+dataset/*
+
+*.ttf
+
+models/*

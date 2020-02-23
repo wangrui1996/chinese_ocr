@@ -22,13 +22,16 @@ from tensorflow.python.keras.models import Model
 from tensorflow.python.keras.callbacks import EarlyStopping, ModelCheckpoint, LearningRateScheduler, TensorBoard
 
 from imp import reload
-import densenet
+from src.models import densenet
+from src.image_generator import generate_ocr
+#import densenet
 
 
 img_h = 32
 img_w = 280
 batch_size = 128
 maxlabellength = 20
+
 
 def get_session(gpu_fraction=1.0):
 
@@ -93,10 +96,7 @@ def gen(data_file, image_path, batchsize=128, maxlabellength=10, imagesize=(32, 
     import random    
     input_height = 32
     input_width = 280
-    bg_color = (255, 255, 255)
-    fg_color = (0, 0, 0)
-    font_ch = ImageFont.truetype('../fonts/simsun.ttf', input_height, 0)
-    char_list = open('char_std_5990.txt', 'r', encoding='utf-8').readlines()
+    char_list = open('../dataset/char_std_5990.txt', 'r', encoding='utf-8').readlines()
     char_list = [ch.strip('\n') for ch in char_list]
 
     while 1:
@@ -116,37 +116,15 @@ def gen(data_file, image_path, batchsize=128, maxlabellength=10, imagesize=(32, 
                 input_length[i] = imagesize[1] // 8
                 labels[i, :len(str1)] = [int(k) - 1 for k in str1]
             else:
-                img = Image.new("RGB", (input_width, input_height), bg_color)
-                height_offset_range = input_height // 8
-                width_offset_range = input_height // 4
-                char = ""
-                for _ in range(random.randint(13, 16)):
-                    char = char + str(random.randint(0, 9))
-
-                if random.randint(0, 8) > 6:
-                    char = str(char[:(len(char) - 2)]) + 'X' + str(char[(len(char) - 2):])
-
-                offset_x = random.randint(-width_offset_range, width_offset_range)
-                offset_y = random.randint(-height_offset_range, height_offset_range)
-                ImageDraw.Draw(img).text((offset_x, offset_y), char, fg_color, font=font_ch)
-
-                def rotate_image(img, rotate_range=3):
-                    img = img.convert('RGBA')
-                    ratate = random.randint(-rotate_range, rotate_range)
-                    rot = img.rotate(ratate)
-                    bg_ = Image.new('RGBA', rot.size, (255,) * 4)
-                    # bg_ = Image.new("RGBA", img.size, bg_color)
-                    img = Image.composite(rot, bg_, rot)
-                    img = img.convert("RGB")
-                    return img
-                img = rotate_image(img).convert('L')
+                img, label = generate_ocr(input_width,input_height)
+                img = img.convert('L')
 
                 img = np.array(img, 'f') / 255.0 - 0.5
                 x[i] = np.expand_dims(img, axis=2)
 
-                label_length[i] = len(char)
+                label_length[i] = len(label)
                 input_length[i] = imagesize[1] // 8
-                labels[i, :len(char)] = [char_list.index(k) - 1 for k in char]
+                labels[i, :len(label)] = label
 
         inputs = {'the_input': x,
                 'the_labels': labels,
@@ -180,7 +158,7 @@ def get_model(img_h, nclass):
 
 
 if __name__ == '__main__':
-    char_set = open('char_std_5990.txt', 'r', encoding='utf-8').readlines()
+    char_set = open('../dataset/char_std_5990.txt', 'r', encoding='utf-8').readlines()
     char_set = ''.join([ch.strip('\n') for ch in char_set][1:] + ['卍'])
     nclass = len(char_set)
 
@@ -194,8 +172,8 @@ if __name__ == '__main__':
         basemodel.load_weights(modelPath)
         print('done!')
 
-    train_loader = gen('data_train.txt', './images', batchsize=batch_size, maxlabellength=maxlabellength, imagesize=(img_h, img_w))
-    test_loader = gen('data_test.txt', './images', batchsize=batch_size, maxlabellength=maxlabellength, imagesize=(img_h, img_w))
+    train_loader = gen('../dataset/data_train.txt', '../dataset/images', batchsize=batch_size, maxlabellength=maxlabellength, imagesize=(img_h, img_w))
+    test_loader = gen('../dataset/data_test.txt', '../dataset/images', batchsize=batch_size, maxlabellength=maxlabellength, imagesize=(img_h, img_w))
 
     checkpoint = ModelCheckpoint(filepath='./models/weights_densenet-{epoch:02d}-{val_loss:.2f}.h5', monitor='val_loss', save_best_only=False, save_weights_only=True)
     lr_schedule = lambda epoch: 0.0005 * 0.4**epoch
@@ -207,7 +185,7 @@ if __name__ == '__main__':
     print('-----------Start training-----------')
     model.fit_generator(train_loader,
     	steps_per_epoch = 3607567 // batch_size,
-    	epochs = 10,
+    	epochs = 100,
     	initial_epoch = 0,
     	validation_data = test_loader,
     	validation_steps = 36440 // batch_size,
