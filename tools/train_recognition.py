@@ -102,7 +102,7 @@ def gen(data_file, image_path, batchsize=128, maxlabellength=10, imagesize=(32, 
     while 1:
         shufimagefile = _imagefile[r_n.get(batchsize)]
         for i, j in enumerate(shufimagefile):
-            if random.randint(0, 10) < 8:
+            if random.randint(0, 10) < 2:
                 img1 = Image.open(os.path.join(image_path, j)).convert('L')
                 img = np.array(img1, 'f') / 255.0 - 0.5
 
