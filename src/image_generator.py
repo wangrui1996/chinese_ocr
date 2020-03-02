@@ -28,6 +28,12 @@ def phone_number(length=10):
 
     return phone
 
+def chinese(length=10):
+    string_chinese = ""
+    for i in range(length):
+        string_chinese = string_chinese + random.choice(char_list)
+    return string_chinese
+
 def identity_card(length=10):
     select_range = digits + ["X", 'x']
     id = ""
@@ -59,15 +65,19 @@ def image_enhance(img,blur_porb=90, line_prob=20, bright_range=0.4, contrast_ran
 #        img = img.filter(ImageFilter.GaussianBlur(radius=2))
     return img
 
-def generate_ocr(input_width, input_height, expend_prob=90, expend_scale=0.8, enhance_prob=90):
+def generate_ocr(input_width, input_height, expend_prob=90, expend_scale=0.6, enhance_prob=90):
     bg_color = (255, 255, 255)
     fg_color = (0, 0, 0)
 
     font_ch = ImageFont.truetype('simsun.ttf', input_height-1, 0)
 
     img = Image.new("RGB", (input_width, input_height), bg_color)
-    string_len = 2*input_width // input_height
-    string = random.choice([phone_number, identity_card, mailbox])(string_len)
+    if prob(50):
+        string_len = 2*input_width // input_height
+        string = random.choice([phone_number, identity_card, mailbox])(string_len)
+    else:
+        string_len = input_width//input_height
+        string = chinese(string_len)
 
     ImageDraw.Draw(img).text((0, 0), string, fg_color, font=font_ch)
     string = string.replace(" ", "")

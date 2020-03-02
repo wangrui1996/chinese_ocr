@@ -68,7 +68,12 @@ if __name__ == '__main__':
 
     for image_file in sorted(image_files):
         image = np.array(Image.open(image_file).convert('RGB'))
-        res = progress(image)
+        #image = cv2.resize(image, (600, 1600))
+        #print(image.shape)
+        #progress_single(image)
+        #exit(0)
+        #res = progress(image)
+        res = progress_single(image)
         print(res)
         exit(0)
         t = time.time()

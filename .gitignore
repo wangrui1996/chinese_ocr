@@ -22,3 +22,6 @@ dataset/*
 *.ttf
 
 models/*
+
+test_images
+label_tmp
