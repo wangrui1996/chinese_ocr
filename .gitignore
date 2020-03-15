@@ -27,3 +27,4 @@ test_images
 label_tmp
 
 .DS_Store
+*.zip
